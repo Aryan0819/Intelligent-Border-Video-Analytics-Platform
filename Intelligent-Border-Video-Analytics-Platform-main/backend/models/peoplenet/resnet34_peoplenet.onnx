@@ -1,0 +1,34 @@
+# Save as backend/test_peoplenet.py
+import os
+import onnxruntime as ort
+import numpy as np
+
+MODEL_PATH = "models/peoplenet/resnet34_peoplenet.onnx"
+
+if not os.path.exists(MODEL_PATH):
+    print(f"❌ Error: Model file not found at {MODEL_PATH}")
+    exit(1)
+
+try:
+    # Initialize session
+    session = ort.InferenceSession(MODEL_PATH, providers=['CPUExecutionProvider'])
+    
+    # Check input node details
+    input_meta = session.get_inputs()[0]
+    print(f"✅ Model Loaded Successfully!")
+    print(f"Input Node Name:  {input_meta.name}")
+    print(f"Input Node Shape: {input_meta.shape}")
+
+    # Check output node details
+    outputs = session.get_outputs()
+    print(f"Output Node Count: {len(outputs)}")
+    for out in outputs:
+        print(f" - Output Node Name: {out.name} | Shape: {out.shape}")
+
+    # Dummy Inference Test (Batch Size 1, 3 Channels, 544 Height, 960 Width)
+    dummy_input = np.random.randn(1, 3, 544, 960).astype(np.float32)
+    session.run(None, {input_meta.name: dummy_input})
+    print("✅ Dummy inference pass successful!")
+
+except Exception as e:
+    print(f"❌ Failed to run ONNX session: {str(e)}")
